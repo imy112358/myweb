@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=750, initial-scale=1.0"/>
+<title>1:1 UI Restore</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:#f7f4f3;
+  font-family:
+  -apple-system,
+  BlinkMacSystemFont,
+  "PingFang SC",
+  sans-serif;
+}
+
+.app{
+  width:750px;
+  height:1624px;
+  margin:0 auto;
+  background:#f7f4f3;
+  position:relative;
+  overflow:hidden;
+}
+
+/* 状态栏 */
+
+.status{
+  height:88px;
+  padding:0 32px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.time{
+  font-size:36px;
+  font-weight:600;
+  color:#000;
+}
+
+.icons{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.signal{
+  display:flex;
+  align-items:flex-end;
+  gap:3px;
+}
+
+.signal span{
+  width:5px;
+  background:#000;
+  border-radius:2px;
+}
+
+.signal span:nth-child(1){height:10px;}
+.signal span:nth-child(2){height:16px;}
+.signal span:nth-child(3){height:22px;}
+.signal span:nth-child(4){height:28px;}
+
+.wifi{
+  width:24px;
+  height:24px;
+  border:3px solid #000;
+  border-left-color:transparent;
+  border-top-color:transparent;
+  transform:rotate(45deg);
+  border-radius:50%;
+}
+
+.battery{
+  width:46px;
+  height:24px;
+  border:3px solid #000;
+  border-radius:6px;
+  position:relative;
+}
+
+.battery:after{
+  content:'';
+  position:absolute;
+  right:-7px;
+  top:6px;
+  width:5px;
+  height:10px;
+  background:#000;
+  border-radius:2px;
+}
+
+/* 顶部 */
+
+.header{
+  padding:14px 30px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+}
+
+.tabs{
+  display:flex;
+  align-items:flex-start;
+  gap:42px;
+}
+
+.tab{
+  position:relative;
+}
+
+.tab.active{
+  font-size:64px;
+  font-weight:800;
+  color:#000;
+  line-height:1;
+}
+
+.tab.active:after{
+  content:'';
+  position:absolute;
+  left:2px;
+  bottom:-16px;
+  width:72px;
+  height:8px;
+  background:#ff5b6d;
+  border-radius:999px;
+}
+
+.tab.normal{
+  font-size:34px;
+  color:#9d9d9d;
+  font-weight:600;
+  margin-top:16px;
+}
+
+.filter{
+  margin-top:4px;
+  height:62px;
+  padding:0 24px;
+  background:#f5e9e8;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:#3a3a3a;
+  font-size:30px;
+  font-weight:500;
+}
+
+.filter svg{
+  width:28px;
+  height:28px;
+}
+
+/* 大卡 */
+
+.hero{
+  width:690px;
+  height:930px;
+  margin:38px auto 26px;
+  border-radius:36px;
+  overflow:hidden;
+  position:relative;
+  background:url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1200&auto=format&fit=crop')
+  center center/cover no-repeat;
+  box-shadow:
+  0 8px 18px rgba(0,0,0,.04),
+  0 20px 40px rgba(0,0,0,.06);
+}
+
+.hero:before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+  linear-gradient(
+    to top,
+    rgba(0,0,0,.58) 0%,
+    rgba(0,0,0,.20) 35%,
+    rgba(0,0,0,.05) 60%,
+    rgba(0,0,0,0) 100%
+  );
+}
+
+.online{
+  position:absolute;
+  top:24px;
+  right:24px;
+  z-index:2;
+  height:54px;
+  padding:0 18px;
+  border-radius:28px;
+  background:rgba(0,0,0,.42);
+  display:flex;
+  align-items:center;
+  color:#fff;
+  font-size:30px;
+  font-weight:600;
+  backdrop-filter:blur(10px);
+}
+
+.online:before{
+  content:'';
+  width:16px;
+  height:16px;
+  background:#39dc67;
+  border-radius:50%;
+  margin-right:10px;
+}
+
+.hero-info{
+  position:absolute;
+  left:30px;
+  right:30px;
+  bottom:28px;
+  z-index:2;
+  color:#fff;
+}
+
+.hero-name{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  font-size:58px;
+  font-weight:700;
+}
+
+.age{
+  height:42px;
+  padding:0 16px;
+  background:#fff;
+  border-radius:24px;
+  color:#ff6173;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  font-weight:700;
+  margin-top:10px;
+}
+
+.meta{
+  margin-top:16px;
+  font-size:34px;
+  opacity:.95;
+}
+
+.tags{
+  display:flex;
+  gap:14px;
+  margin-top:22px;
+}
+
+.tag{
+  padding:12px 20px;
+  background:rgba(255,255,255,.16);
+  border-radius:24px;
+  font-size:28px;
+  backdrop-filter:blur(10px);
+}
+
+.like{
+  position:absolute;
+  right:24px;
+  bottom:46px;
+  width:110px;
+  height:110px;
+  background:#fff;
+  border-radius:50%;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+}
+
+.like:before{
+  content:'❤';
+  color:#ff5c70;
+  font-size:52px;
+}
+
+/* 小卡 */
+
+.cards{
+  width:690px;
+  margin:0 auto;
+  display:flex;
+  gap:22px;
+}
+
+.card{
+  width:334px;
+  background:#fff;
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:
+  0 4px 10px rgba(0,0,0,.03),
+  0 10px 26px rgba(0,0,0,.04);
+}
+
+.card-cover{
+  height:300px;
+  position:relative;
+  background-size:cover;
+  background-position:center;
+}
+
+.card1{
+  background-image:url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1200&auto=format&fit=crop');
+}
+
+.card2{
+  background-image:url('https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=1200&auto=format&fit=crop');
+}
+
+.small-online{
+  position:absolute;
+  top:14px;
+  right:14px;
+  height:44px;
+  padding:0 14px;
+  border-radius:22px;
+  background:rgba(0,0,0,.38);
+  display:flex;
+  align-items:center;
+  color:#fff;
+  font-size:24px;
+  backdrop-filter:blur(8px);
+}
+
+.small-online:before{
+  content:'';
+  width:12px;
+  height:12px;
+  background:#38db67;
+  border-radius:50%;
+  margin-right:8px;
+}
+
+.card-body{
+  padding:18px 20px 24px;
+}
+
+.card-name{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:38px;
+  font-weight:700;
+  color:#333;
+}
+
+.card-age{
+  color:#ff5b6d;
+  font-size:30px;
+  font-weight:700;
+  margin-top:8px;
+}
+
+.card-meta{
+  margin-top:14px;
+  color:#666;
+  font-size:28px;
+  line-height:1.4;
+}
+
+/* 底部 */
+
+.bottom{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:128px;
+  background:#fff;
+  border-top:1px solid #eee;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+}
+
+.nav{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  color:#444;
+  font-size:24px;
+}
+
+.nav.active{
+  color:#ff5c70;
+}
+
+.icon{
+  width:42px;
+  height:42px;
+  position:relative;
+}
+
+/* home */
+.home{
+  background:#ff5c70;
+  clip-path:polygon(
+    50% 0,
+    100% 38%,
+    100% 100%,
+    0 100%,
+    0 38%
+  );
+  border-radius:8px;
+}
+
+/* 其他icon */
+.circle{
+  border:4px solid currentColor;
+  border-radius:50%;
+}
+
+.msg{
+  border:4px solid currentColor;
+  border-radius:12px;
+}
+
+.user{
+  border:4px solid currentColor;
+  border-radius:50%;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- 状态栏 -->
+  <div class="status">
+
+    <div class="time">9:41</div>
+
+    <div class="icons">
+
+      <div class="signal">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <div class="wifi"></div>
+
+      <div class="battery"></div>
+
+    </div>
+
+  </div>
+
+  <!-- 顶部 -->
+  <div class="header">
+
+    <div class="tabs">
+
+      <div class="tab active">
+        推荐
+      </div>
+
+      <div class="tab normal">
+        附近
+      </div>
+
+    </div>
+
+    <div class="filter">
+
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M4 5H20L14 12V18L10 20V12L4 5Z"
+        stroke="#444"
+        stroke-width="2"
+        stroke-linejoin="round"/>
+      </svg>
+
+      筛选
+
+    </div>
+
+  </div>
+
+  <!-- 大卡 -->
+  <div class="hero">
+
+    <div class="online">
+      在线
+    </div>
+
+    <div class="hero-info">
+
+      <div class="hero-name">
+        小鹿的森林
+
+        <div class="age">
+          24 ♀
+        </div>
+      </div>
+
+      <div class="meta">
+        深圳 · 162cm · 44kg · 产品经理
+      </div>
+
+      <div class="tags">
+
+        <div class="tag">
+          温柔善良
+        </div>
+
+        <div class="tag">
+          热爱旅行
+        </div>
+
+        <div class="tag">
+          可甜可盐
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="like"></div>
+
+  </div>
+
+  <!-- 小卡 -->
+  <div class="cards">
+
+    <div class="card">
+
+      <div class="card-cover card1">
+
+        <div class="small-online">
+          在线
+        </div>
+
+      </div>
+
+      <div class="card-body">
+
+        <div class="card-name">
+          风吹海扬
+          <div class="card-age">26 ♂</div>
+        </div>
+
+        <div class="card-meta">
+          上海 · 178cm · 程序员
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="card-cover card2">
+
+        <div class="small-online">
+          在线
+        </div>
+
+      </div>
+
+      <div class="card-body">
+
+        <div class="card-name">
+          暖暖
+          <div class="card-age">24 ♀</div>
+        </div>
+
+        <div class="card-meta">
+          北京 · 165cm · 设计师
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- 底部 -->
+  <div class="bottom">
+
+    <div class="nav active">
+      <div class="icon home"></div>
+      <div>首页</div>
+    </div>
+
+    <div class="nav">
+      <div class="icon circle"></div>
+      <div>互动</div>
+    </div>
+
+    <div class="nav">
+      <div class="icon circle"></div>
+      <div>动态</div>
+    </div>
+
+    <div class="nav">
+      <div class="icon msg"></div>
+      <div>消息</div>
+    </div>
+
+    <div class="nav">
+      <div class="icon user"></div>
+      <div>我的</div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
