@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天气详情</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-from: #d7f3ff;
+      --bg-to: #f3fbff;
+      --card-bg: rgba(255, 255, 255, 0.88);
+      --text-primary: #0b7285;
+      --text-secondary: #334e68;
+      --text-muted: #4f6f88;
+      --shadow: 0 12px 36px rgba(11, 114, 133, 0.12);
+      --radius: 22px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(180deg, var(--bg-from) 0%, var(--bg-to) 100%);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; top: -20%; left: -10%;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(11,114,133,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed; bottom: -20%; right: -10%;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(91,141,238,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .top-bar {
+      width: 100%; max-width: 900px;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      text-decoration: none; color: var(--text-muted);
+      font-size: 0.85rem; font-weight: 400;
+      padding: 8px 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(11,114,133,0.1);
+      transition: all 0.2s ease; backdrop-filter: blur(8px);
+    }
+    .back-btn:hover {
+      background: rgba(255,255,255,0.9);
+      color: var(--text-primary);
+      transform: translateX(-2px);
+    }
+
+    .page-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 300; }
+
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 700; color: var(--text-primary);
+      margin-bottom: 6px; text-align: center;
+    }
+
+    .subtitle {
+      text-align: center; color: var(--text-muted);
+      font-size: 0.82rem; font-weight: 300;
+      margin-bottom: 36px; letter-spacing: 0.3px;
+    }
+
+    .container {
+      width: 100%; max-width: 900px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius); padding: 26px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(11,114,133,0.08);
+    }
+
+    .card-title {
+      font-size: 0.78rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      font-weight: 500; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title::before {
+      content: ''; width: 3px; height: 14px;
+      background: linear-gradient(180deg, var(--text-primary), #5b8dee);
+      border-radius: 2px;
+    }
+
+    /* 当前天气 */
+    .current-card { grid-column: 1; grid-row: 1; }
+
+    .current-main {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 24px; gap: 12px;
+    }
+
+    .big-temp {
+      font-size: clamp(3rem, 10vw, 4.5rem); font-weight: 700;
+      font-family: 'Orbitron', sans-serif;
+      color: var(--text-primary); line-height: 1;
+    }
+    .big-temp-unit {
+      font-size: 1.4rem; font-weight: 400;
+      color: var(--text-muted);
+      font-family: 'Noto Sans SC', sans-serif;
+      vertical-align: super; margin-left: 2px;
+    }
+
+    .big-condition {
+      font-size: 1.15rem; color: var(--text-secondary);
+      margin-top: 6px; font-weight: 400;
+    }
+
+    .big-city { text-align: right; flex-shrink: 0; }
+    .city-name { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); display: block; }
+    .city-province { font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 2px; }
+    .city-tag {
+      font-size: 0.72rem; color: var(--text-muted);
+      background: rgba(11,114,133,0.08);
+      padding: 2px 8px; border-radius: 20px;
+      margin-top: 6px; display: inline-block;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px; margin-bottom: 0;
+    }
+
+    .detail-item {
+      background: #f2fbfe; border-radius: 14px;
+      padding: 12px 10px; text-align: center;
+      border: 1px solid rgba(11,114,133,0.06);
+    }
+
+    .detail-label {
+      font-size: 0.68rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      display: block; margin-bottom: 4px;
+    }
+
+    .detail-value {
+      font-size: 1.05rem; font-weight: 600;
+      color: var(--text-primary); display: block;
+    }
+
+    .detail-unit { font-size: 0.65rem; color: var(--text-muted); font-weight: 300; }
+
+    /* AQI */
+    .aqi-card { grid-column: 2; grid-row: 1; }
+
+    .aqi-main { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+
+    .aqi-number {
+      font-size: clamp(2.5rem, 8vw, 4rem); font-weight: 700;
+      font-family: 'Orbitron', sans-serif; line-height: 1;
+    }
+
+    .aqi-info { flex: 1; }
+
+    .aqi-level {
+      font-size: 1.1rem; font-weight: 600;
+      display: inline-block; padding: 4px 14px;
+      border-radius: 20px; margin-bottom: 4px;
+    }
+
+    .aqi-desc { font-size: 0.78rem; color: var(--text-muted); font-weight: 300; line-height: 1.5; }
+
+    .aqi-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .aqi-detail-item {
+      background: #f8fbff; border-radius: 10px;
+      padding: 10px 8px; text-align: center;
+      border: 1px solid rgba(56,128,217,0.08);
+    }
+
+    .aqi-detail-label { font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 3px; }
+    .aqi-detail-value { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+
+    /* 日出日落 */
+    .sun-card { grid-column: 1 / -1; }
+
+    .sun-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .sun-item {
+      border-radius: 16px; padding: 18px 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+
+    .sun-item.sunrise {
+      background: linear-gradient(135deg, #fff8e1, #fff3cd);
+      border: 1px solid rgba(217,132,25,0.15);
+    }
+    .sun-item.sunset {
+      background: linear-gradient(135deg, #fff0e6, #ffe0cc);
+      border: 1px solid rgba(200,80,25,0.15);
+    }
+
+    .sun-emoji { font-size: 32px; flex-shrink: 0; }
+
+    .sun-text-group { flex: 1; }
+
+    .sun-label {
+      font-size: 0.72rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      font-weight: 500; display: block; margin-bottom: 2px;
+    }
+
+    .sun-time {
+      font-size: 1.6rem; font-weight: 700;
+      font-family: 'Orbitron', sans-serif;
+      color: var(--text-primary); line-height: 1.1;
+    }
+    .sun-item.sunrise .sun-time { color: #d98419; }
+    .sun-item.sunset  .sun-time { color: #c05020; }
+
+    /* 生活指数 */
+    .life-card { grid-column: 1 / -1; }
+
+    .life-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      width: 100%;
+    }
+
+    .life-item {
+      border-radius: 16px; padding: 16px 18px;
+      background: #f8fbff;
+      border: 1px solid rgba(56,128,217,0.1);
+      display: flex; align-items: flex-start; gap: 12px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .life-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(56,128,217,0.1);
+    }
+
+    .life-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .life-body { flex: 1; }
+    .life-name { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+    .life-level {
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.04em; display: inline-block;
+      padding: 1px 8px; border-radius: 20px; margin-bottom: 4px;
+    }
+    .life-desc { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5; font-weight: 300; }
+
+    /* 加载 & 错误 */
+    .loading-wrap { width: 100%; max-width: 900px; text-align: center; padding: 120px 0; }
+    .loading-icon {
+      font-size: 48px; animation: float 2s ease-in-out infinite;
+      display: block; margin-bottom: 16px;
+    }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .loading-text { font-size: 1rem; color: var(--text-muted); font-weight: 300; }
+    .loading-city { font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; font-weight: 300; }
+
+    .error-wrap { width: 100%; max-width: 500px; text-align: center; padding: 100px 0; }
+    .error-icon { font-size: 48px; display: block; margin-bottom: 16px; }
+    .error-text { font-size: 1rem; color: #d64545; margin-bottom: 8px; }
+    .error-hint { font-size: 0.82rem; color: var(--text-muted); font-weight: 300; }
+
+    footer {
+      margin-top: 48px; color: var(--text-muted);
+      font-size: 0.75rem; font-weight: 300; text-align: center;
+    }
+    footer a { color: var(--text-primary); text-decoration: none; }
+
+    .hidden { display: none !important; }
+
+    /* 入场动画 */
+    .card {
+      opacity: 0; transform: translateY(20px);
+      animation: fadeUp 0.55s ease forwards;
+    }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.15s; }
+    .card:nth-child(3) { animation-delay: 0.25s; }
+    .card:nth-child(4) { animation-delay: 0.35s; }
+
+    /* AQI 颜色 */
+    .aqi-1 { color: #2f9e44; }
+    .aqi-2 { color: #d98419; }
+    .aqi-3 { color: #e06060; }
+    .aqi-4 { color: #d64545; }
+    .aqi-5 { color: #c0392b; }
+    .aqi-6 { color: #922b21; }
+
+    .aqi-badge-1 { background: rgba(47,158,68,0.15);  color: #2f9e44; }
+    .aqi-badge-2 { background: rgba(217,132,25,0.15);  color: #d98419; }
+    .aqi-badge-3 { background: rgba(240,112,133,0.15); color: #e06060; }
+    .aqi-badge-4 { background: rgba(214,69,69,0.15);   color: #d64545; }
+    .aqi-badge-5 { background: rgba(192,57,43,0.15);  color: #c0392b; }
+    .aqi-badge-6 { background: rgba(146,43,33,0.15);  color: #922b21; }
+
+    /* =======================
+       移动端响应式（一栏一行核心修改）
+    ======================= */
+    @media (max-width: 768px) {
+      body {
+        padding: 16px 12px 40px;
+      }
+      .container {
+        /* 在移动端直接放弃 Grid 布局，改用纵向 Flex，保证整体一栏一行 */
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .card {
+        width: 100%;
+        padding: 20px 16px;
+      }
+      
+      /* 天气头部纵向对齐 */
+      .current-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .big-city {
+        text-align: left;
+      }
+      
+      /* AQI头部纵向对齐 */
+      .aqi-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      
+      /* 湿度、风力、PM2.5等小数据：两栏显示（因为单栏会导致页面过长，两栏更清爽） */
+      .detail-grid, .aqi-detail-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      /* 日出日落、生活指数：严格遵循一栏一行 */
+      .sun-grid, .life-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .life-item {
+        padding: 14px 16px;
+      }
+      .big-temp { font-size: 3rem; }
+      .aqi-number { font-size: 3rem; }
+      footer { margin-top: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="index.html" class="back-btn">
+      <span>←</span> 返回导航
+    </a>
+    <span class="page-title">实用工具</span>
+  </div>
+
+  <div class="loading-wrap" id="loadingWrap">
+    <span class="loading-icon">⛅</span>
+    <p class="loading-text">正在获取当前位置...</p>
+    <p class="loading-city" id="loadingCity">河南南阳</p>
+  </div>
+
+  <div class="error-wrap hidden" id="errorWrap">
+    <span class="error-icon">😵</span>
+    <p class="error-text">无法获取天气信息</p>
+    <p class="error-hint">请检查网络连接，或稍后重试</p>
+  </div>
+
+  <div class="hidden" id="content">
+    <h1 id="pageTitle">天气详情</h1>
+    <p class="subtitle" id="pageSubtitle">数据加载中...</p>
+
+    <div class="container">
+
+      <div class="card current-card">
+        <div class="card-title">当前天气</div>
+        <div class="current-main">
+          <div>
+            <span class="big-temp" id="temperature">--<span class="big-temp-unit">°C</span></span>
+            <p class="big-condition" id="condition">--</p>
+          </div>
+          <div class="big-city">
+            <span class="city-name" id="cityName">--</span>
+            <span class="city-province" id="cityProvince">--</span>
+            <span class="city-tag" id="cityTag">--</span>
+          </div>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">体感</span>
+            <span class="detail-value" id="feels">--<span class="detail-unit">°</span></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">湿度</span>
+            <span class="detail-value" id="humidity">--<span class="detail-unit">%</span></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">风力</span>
+            <span class="detail-value" id="wind">--<span class="detail-unit">级</span></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">气压</span>
+            <span class="detail-value" id="pressure">--<span class="detail-unit">hPa</span></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">降水量</span>
+            <span class="detail-value" id="precip">--<span class="detail-unit">mm</span></span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">能见度</span>
+            <span class="detail-value" id="vis">--<span class="detail-unit">km</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card aqi-card">
+        <div class="card-title">空气质量 AQI</div>
+        <div class="aqi-main">
+          <span class="aqi-number" id="aqiNum">--</span>
+          <div class="aqi-info">
+            <span class="aqi-level aqi-badge-1" id="aqiLevel">--</span>
+            <p class="aqi-desc" id="aqiDesc">--</p>
+          </div>
+        </div>
+        <div class="aqi-detail-grid">
+          <div class="aqi-detail-item">
+            <span class="aqi-detail-label">PM2.5</span>
+            <span class="aqi-detail-value" id="pm25">--</span>
+          </div>
+          <div class="aqi-detail-item">
+            <span class="aqi-detail-label">PM10</span>
+            <span class="aqi-detail-value" id="pm10">--</span>
+          </div>
+          <div class="aqi-detail-item">
+            <span class="aqi-detail-label">CO</span>
+            <span class="aqi-detail-value" id="co">--</span>
+          </div>
+          <div class="aqi-detail-item">
+            <span class="aqi-detail-label">NO&#8322;</span>
+            <span class="aqi-detail-value" id="no2">--</span>
+          </div>
+          <div class="aqi-detail-item">
+            <span class="aqi-detail-label">O&#8323;</span>
+            <span class="aqi-detail-value" id="o3">--</span>
+          </div>
+          <div class="aqi-detail-item">
+            <span class="aqi-detail-label">SO&#8322;</span>
+            <span class="aqi-detail-value" id="so2">--</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card sun-card">
+        <div class="card-title">日出日落</div>
+        <div class="sun-grid">
+          <div class="sun-item sunrise">
+            <span class="sun-emoji">&#127774;</span>
+            <div class="sun-text-group">
+              <span class="sun-label">日出时间</span>
+              <span class="sun-time" id="sunrise">--:--</span>
+            </div>
+          </div>
+          <div class="sun-item sunset">
+            <span class="sun-emoji">&#127749;</span>
+            <div class="sun-text-group">
+              <span class="sun-label">日落时间</span>
+              <span class="sun-time" id="sunset">--:--</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card life-card">
+        <div class="card-title">生活指数</div>
+        <div class="life-grid" id="lifeGrid">
+          </div>
+      </div>
+
+    </div>
+
+    <footer>
+      <p>数据来源：<a href="https://60s.viki.moe" target="_blank">VikiMoe 60s</a> ·
+      IP定位：<a href="https://vore.top" target="_blank">Vore API</a> · © <span id="year"></span></p>
+    </footer>
+  </div>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+var lifeIcons = {
+  'airconditioner':'&#127877;','allergy':'&#128687;','carwash':'&#128663;',
+  'chill':'&#127783;','clothes':'&#128088;','cold':'&#129396;',
+  'comfort':'&#128578;','diffusion':'&#127787;','dry':'&#128167;',
+  'drying':'&#128250;','fish':'&#128031;','heatstroke':'&#128166;',
+  'makeup':'&#128132;','mood':'&#128522;','morning':'&#127749;',
+  'sports':'&#127939;','sunglasses':'&#128084;','sunscreen':'&#127774;',
+  'tourism':'&#9992;&#65039;','traffic':'&#128696;','ultraviolet':'&#9728;&#65039;',
+  'umbrella':'&#128761;',
+  // 中文名映射
+  '空调':'&#127877;','过敏':'&#128687;','洗车':'&#128663;',
+  '穿衣':'&#128088;','感冒':'&#129396;','舒适度':'&#128578;',
+  '路况':'&#128696;','运动':'&#127939;','旅游':'&#9992;&#65039;',
+  '心情':'&#128522;','化妆':'&#128132;','划船':'&#128095;',
+  '逛街':'&#128722;','钓鱼':'&#128031;','日出':'&#127774;',
+  '日落':'&#127749;','紫外线':'&#9728;&#65039;','防晒':'&#128137;',
+  '晾晒':'&#128250;','干燥':'&#128167;','开窗':'&#127787;'
+};
+
+function aqiInfo(aqi) {
+  aqi = parseInt(aqi, 10);
+  if (aqi <= 50)  return { cls:'aqi-1', badge:'aqi-badge-1', label:'优', desc:'空气质量令人满意，基本无空气污染' };
+  if (aqi <= 100) return { cls:'aqi-2', badge:'aqi-badge-2', label:'良', desc:'空气质量可接受，某些污染物可能对极少数异常敏感人群健康有较弱影响' };
+  if (aqi <= 150) return { cls:'aqi-3', badge:'aqi-badge-3', label:'轻度污染', desc:'易感人群症状有轻度加剧，健康人群出现刺激症状' };
+  if (aqi <= 200) return { cls:'aqi-4', badge:'aqi-badge-4', label:'中度污染', desc:'心脏病和肺病患者症状显著加剧，运动耐受力降低' };
+  if (aqi <= 300) return { cls:'aqi-5', badge:'aqi-badge-5', label:'重度污染', desc:'健康人群运动耐受力降低，普遍出现症状' };
+  return                          { cls:'aqi-6', badge:'aqi-badge-6', label:'严重污染', desc:'健康人群运动耐受力明显降低，提前出现某些疾病' };
+}
+
+// 获取中文名（key → 友好名）
+function getLifeName(item) {
+  var nameMap = {
+    'airconditioner':'空调指数','allergy':'过敏指数','carwash':'洗车指数',
+    'chill':'风寒指数','clothes':'穿衣指数','cold':'感冒指数',
+    'comfort':'舒适度','diffusion':'空气污染扩散条件','dry':'干燥指数',
+    'drying':'晾晒指数','fish':'钓鱼指数','heatstroke':'中暑指数',
+    'makeup':'化妆指数','mood':'心情指数','morning':'晨练指数',
+    'sports':'运动指数','sunglasses':'太阳镜指数','sunscreen':'防晒指数',
+    'tourism':'旅游指数','traffic':'交通指数','ultraviolet':'紫外线指数',
+    'umbrella':'雨伞指数'
+  };
+  return nameMap[item.key] || item.name || item.key;
+}
+
+async function getCity() {
+  // 优先用 vore.top IP 定位
+  try {
+    var r = await fetch('https://api.vore.top/api/IPdata?ip=');
+    var d = await r.json();
+    if (d && d.ipdata && d.ipdata.info2) {
+      return { city: d.ipdata.info2, province: d.ipdata.info1 || '', isLocal: true };
+    }
+    if (d && d.adcode && d.adcode.c) {
+      return { city: d.adcode.c, province: d.adcode.p || '', isLocal: true };
+    }
+  } catch(e) {}
+  // 定位失败，默认河南郑州市
+  return { city: '郑州市', province: '河南省', isLocal: false };
+}
+
+async function main() {
+  var loadingEl  = document.getElementById('loadingWrap');
+  var errorEl    = document.getElementById('errorWrap');
+  var contentEl  = document.getElementById('content');
+
+  try {
+    // 第一步：IP 定位
+    var loc = await getCity();
+    var city = loc.city;
+    var isLocal = loc.isLocal;
+
+    document.getElementById('loadingCity').textContent =
+      isLocal ? (loc.province ? loc.province + ' ' + city : city) : '河南郑州市（默认）';
+
+    // 第二步：拿天气数据
+    var r = await fetch('https://60s.viki.moe/v2/weather?query=' + encodeURIComponent(city));
+    var data = await r.json();
+
+    if (data.code !== 200) throw new Error(data.message || '接口错误');
+
+    var w   = data.data.weather;
+    var a   = data.data.air_quality;
+    var sr  = data.data.sunrise;
+    var li  = data.data.life_indices || [];
+    var locData = data.data.location;
+
+    // 标题区
+    var displayCity = locData.city || city;
+    var displayProvince = locData.province || loc.province || '';
+    document.getElementById('pageTitle').textContent = displayCity + ' 实时天气';
+    var updatedTime = w.updated ? w.updated.split(' ')[1] : '--:--';
+    document.getElementById('pageSubtitle').textContent =
+      '数据更新于 ' + updatedTime + (isLocal ? '' : ' · 默认显示河南郑州市');
+
+    // 当前天气
+    document.getElementById('temperature').innerHTML = w.temperature + '<span class="big-temp-unit">°C</span>';
+    document.getElementById('condition').textContent  = w.condition;
+    document.getElementById('cityName').textContent   = displayCity;
+    document.getElementById('cityProvince').textContent = displayProvince;
+    document.getElementById('cityTag').textContent    = isLocal ? '&#128205; 实时定位' : '&#9729; 默认位置';
+    document.getElementById('feels').innerHTML    = (w.feels_like || w.temperature) + '<span class="detail-unit">°</span>';
+    document.getElementById('humidity').innerHTML = w.humidity + '<span class="detail-unit">%</span>';
+    document.getElementById('wind').innerHTML     = w.wind_power + '<span class="detail-unit">级</span>';
+    document.getElementById('pressure').innerHTML = w.pressure + '<span class="detail-unit">hPa</span>';
+    document.getElementById('precip').innerHTML   = w.precipitation + '<span class="detail-unit">mm</span>';
+    document.getElementById('vis').innerHTML      = (w.visibility || '--') + '<span class="detail-unit">km</span>';
+
+    // AQI
+    var lv = aqiInfo(a.aqi);
+    var aqiNumEl = document.getElementById('aqiNum');
+    aqiNumEl.textContent = a.aqi;
+    aqiNumEl.className = 'aqi-number ' + lv.cls;
+    var aqiLvlEl = document.getElementById('aqiLevel');
+    aqiLvlEl.className = 'aqi-level ' + lv.badge;
+    aqiLvlEl.textContent = lv.label;
+    document.getElementById('aqiDesc').textContent = lv.desc;
+    document.getElementById('pm25').textContent = a.pm25;
+    document.getElementById('pm10').textContent = a.pm10;
+    document.getElementById('co').textContent   = a.co;
+    document.getElementById('no2').textContent  = a.no2;
+    document.getElementById('o3').textContent   = a.o3;
+    document.getElementById('so2').textContent   = a.so2;
+
+    // 日出日落
+    document.getElementById('sunrise').textContent = sr.sunrise_desc;
+    document.getElementById('sunset').textContent  = sr.sunset_desc;
+
+    // 生活指数
+    var lifeGrid = document.getElementById('lifeGrid');
+    if (li.length > 0) {
+      li.forEach(function(item) {
+        var icon = lifeIcons[item.key] || lifeIcons[item.name] || '&#128203;';
+        var name = getLifeName(item);
+        var lvlColor = item.level.indexOf('优') !== -1 ? '#2f9e44'
+                     : item.level.indexOf('良') !== -1 ? '#d98419'
+                     : item.level.indexOf('污染') !== -1 || item.level.indexOf('重') !== -1 ? '#e06060'
+                     : '#5b8dee';
+        var lvlBg = item.level.indexOf('优') !== -1 ? 'rgba(47,158,68,0.12)'
+                  : item.level.indexOf('良') !== -1 ? 'rgba(217,132,25,0.12)'
+                  : item.level.indexOf('污染') !== -1 || item.level.indexOf('重') !== -1 ? 'rgba(224,96,96,0.12)'
+                  : 'rgba(91,141,238,0.12)';
+        var div = document.createElement('div');
+        div.className = 'life-item';
+        div.innerHTML =
+          '<span class="life-icon">' + icon + '</span>' +
+          '<div class="life-body">' +
+            '<div class="life-name">' + name + '</div>' +
+            '<span class="life-level" style="color:' + lvlColor + ';background:' + lvlBg + '">' + item.level + '</span>' +
+            '<p class="life-desc">' + (item.description || '') + '</p>' +
+          '</div>';
+        lifeGrid.appendChild(div);
+      });
+    } else {
+      lifeGrid.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;font-weight:300;grid-column:1/-1;text-align:center;padding:20px">暂无生活指数数据</p>';
+    }
+
+    // 显示内容
+    loadingEl.classList.add('hidden');
+    contentEl.classList.remove('hidden');
+
+  } catch(err) {
+    console.error(err);
+    loadingEl.classList.add('hidden');
+    errorEl.classList.remove('hidden');
+  }
+}
+
+main();
+</script>
+
+</body>
+</html>

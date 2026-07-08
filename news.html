@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每日资讯</title>
+
+  <style>
+    :root {
+      --body-bg: #f0f4f7;
+      --text-color: #333;
+      --card-bg: white;
+      --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      --card-shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15);
+      --accent-green: #00796b;
+      --accent-green-light: #4db6ac;
+    }
+
+    html.dark-mode {
+      --body-bg: #1a1d2e;
+      --text-color: #eef2f5;
+      --card-bg: #2c303a;
+      --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      --card-shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.4);
+      --accent-green: #4db6ac;
+      --accent-green-light: #80cbc4;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--body-bg);
+      color: var(--text-color);
+      padding: 20px;
+      transition: background-color 0.5s ease, color 0.5s ease;
+      overflow-x: hidden;
+    }
+
+    /* 主题切换按钮 */
+    .theme-toggle {
+      position: fixed;
+      top: 24px; right: 24px;
+      z-index: 100;
+      background: var(--card-bg);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      cursor: pointer; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .theme-toggle:hover { transform: scale(1.1); }
+    .theme-toggle:active { transform: scale(0.95); }
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle .icon-moon { display: block; }
+    html.dark-mode .theme-toggle .icon-sun { display: block; }
+    html.dark-mode .theme-toggle .icon-moon { display: none; }
+
+    h1#date-title {
+      text-align: center;
+      color: var(--accent-green);
+      margin-bottom: 20px;
+      font-size: 22px;
+      animation: pulse 2s infinite alternate;
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-green-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.02); }
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* ===== 每日卡片 ===== */
+    #dailyCardCoverContainer {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .daily-card {
+      width: 100%;
+      min-height: 160px;
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: white;
+      transition: background 0.7s cubic-bezier(0.25, 0.1, 0.25, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .daily-card::before {
+      content: '';
+      position: absolute;
+      bottom: -5px; left: 0;
+      width: 100%; height: 50px;
+      z-index: 1; pointer-events: none; opacity: 0.12;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 50'%3E%3Cpath d='M-50 30 Q 0 10 50 30 T 150 30 T 250 30 T 350 30 T 450 30 T 550 30 T 650 30 T 750 30 T 850 30' stroke='rgba(255,255,255,0.8)' stroke-width='0.8' fill='none'/%3E%3Cpath d='M-80 40 Q -30 25 20 40 T 120 40 T 220 40 T 320 40 T 420 40 T 520 40 T 620 40 T 720 40 T 820 40' stroke='rgba(255,255,255,0.7)' stroke-width='0.6' fill='none'/%3E%3C/svg%3E") no-repeat bottom;
+      background-size: 200% 100%;
+      animation: scrollTexture 25s linear infinite;
+    }
+    @keyframes scrollTexture {
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* 按星期变色 */
+    .daily-card.monday    { background: linear-gradient(145deg, #2980b9 0%, #2c3e50 100%); }
+    .daily-card.tuesday   { background: linear-gradient(145deg, #27ae60 0%, #16a085 100%); }
+    .daily-card.wednesday{ background: linear-gradient(145deg, #d35400 0%, #e67e22 100%); }
+    .daily-card.thursday { background: linear-gradient(145deg, #f1c40f 0%, #f39c12 100%); color: #333; }
+    .daily-card.friday    { background: linear-gradient(145deg, #c0392b 0%, #e74c3c 100%); }
+    .daily-card.saturday { background: linear-gradient(145deg, #8e44ad 0%, #9b59b6 100%); }
+    .daily-card.sunday   { background: linear-gradient(145deg, #2c3e50 0%, #34495e 100%); }
+
+    .daily-card.thursday .day-english { color: #555; text-shadow: 0 0 3px rgba(255,255,255,0.3); }
+    .daily-card.thursday .day-chinese { color: #444; }
+    .daily-card.thursday .quote { color: #666; }
+
+    html.dark-mode .daily-card.thursday,
+    html.dark-mode .daily-card.thursday .day-english,
+    html.dark-mode .daily-card.thursday .day-chinese,
+    html.dark-mode .daily-card.thursday .quote { color: white; }
+
+    .day-english {
+      font-size: 0.85em;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      opacity: 0.75;
+      margin-bottom: 0px;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+    }
+    .day-chinese {
+      font-size: 2.6em;
+      font-weight: bold;
+      line-height: 1.05;
+      margin: 2px 0 5px 0;
+      text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2), 0px -1px 0px rgba(0, 0, 0, 0.3), 2px 3px 5px rgba(0, 0, 0, 0.3);
+    }
+    .quote {
+      font-family: 'KaiTi', 'STKaiti', '楷体', serif;
+      font-size: 0.8em;
+      opacity: 0.8;
+      padding: 0 10px;
+      max-width: 90%;
+      line-height: 1.4;
+      text-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
+      margin-top: 0px;
+    }
+
+    /* ===== 指数三列 ===== */
+    .index-row {
+      display: flex;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 8px;
+      background: var(--card-bg);
+    }
+    .idx-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px 6px;
+      border-right: 1px solid rgba(0,0,0,0.06);
+      transition: background 0.2s;
+    }
+    .idx-item:last-child { border-right: none; }
+    .idx-item:hover { background: rgba(0,0,0,0.025); }
+    .idx-name {
+      font-size: 0.65rem;
+      color: #999;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+    .idx-value {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: var(--text-color);
+      line-height: 1.2;
+    }
+    .idx-change { font-size: 0.68rem; font-weight: 600; margin-top: 2px; }
+    .idx-change.up   { color: #e74c3c; }
+    .idx-change.down { color: #27ae60; }
+    .idx-change.flat { color: #999; }
+
+    .idx-skel {
+      display: inline-block;
+      height: 10px; width: 55%;
+      background: linear-gradient(90deg, #eee 0%, #f5f5f5 50%, #eee 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s ease-in-out infinite;
+      border-radius: 3px;
+      vertical-align: middle;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ===== 新闻列表 ===== */
+    .news-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: var(--card-shadow);
+      margin: 10px 0;
+      padding: 15px 20px;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+    }
+    .news-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--card-shadow-hover);
+    }
+    .news-card:active { transform: translateY(0) scale(0.99); }
+    .news-card-number {
+      font-size: 18px;
+      font-weight: bold;
+      color: #e67e22;
+      position: absolute;
+      top: 50%; left: 15px;
+      transform: translateY(-50%);
+    }
+    .news-content { margin-left: 32px; font-size: 0.9rem; line-height: 1.6; color: var(--text-color); }
+
+    /* ===== 摸鱼提示 ===== */
+    .tip-card {
+      background: #16a085;
+      color: #fff;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-top: 8px;
+      text-align: center;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      transition: background 0.3s ease;
+      box-shadow: 0 3px 10px rgba(22,160,133,0.2);
+    }
+    .tip-card:hover { background: #117a65; }
+
+    /* 加载动画 */
+    .loading-wrap { text-align: center; padding: 40px 0; color: #999; font-size: 0.9rem; }
+    .loading-icon { font-size: 2rem; display: block; margin-bottom: 10px; animation: bob 2s ease-in-out infinite; }
+    @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      body { padding: 15px; }
+      .daily-card { min-height: 140px; padding: 12px 15px; border-radius: 10px; }
+      .daily-card::before { height: 36px; opacity: 0.1; }
+      .day-english { font-size: 0.75em; letter-spacing: 1px; }
+      .day-chinese { font-size: 2.2em; margin: 0 0 3px 0; }
+      .quote { font-size: 0.75em; line-height: 1.3; }
+      .news-card, .tip-card, .index-row { border-radius: 8px; }
+      .news-card-number { font-size: 16px; }
+      .idx-value { font-size: 0.95rem; }
+    }
+    @media (max-width: 480px) {
+      .daily-card { min-height: 120px; padding: 10px; }
+      .day-english { font-size: 0.7em; }
+      .day-chinese { font-size: 2em; }
+      .quote { font-size: 0.7em; padding: 0 5px; }
+      h1#date-title { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 主题切换 -->
+  <button type="button" id="theme-toggle" class="theme-toggle" aria-label="切换主题">
+    <span class="icon-sun">☀️</span>
+    <span class="icon-moon">🌙</span>
+  </button>
+
+  <h1 id="date-title"></h1>
+
+  <div class="container">
+
+    <!-- 每日卡片 -->
+    <div id="dailyCardCoverContainer">
+      <div class="daily-card" id="dynamicDailyCard">
+        <div class="day-english" id="cardDayEnglish"></div>
+        <div class="day-chinese" id="cardDayChinese"></div>
+        <div class="quote" id="cardQuote">正在加载一言...</div>
+      </div>
+    </div>
+
+    <!-- 指数三列 -->
+    <div class="index-row" id="indexRow">
+      <div class="idx-item" id="idx_0">
+        <div class="idx-name">上证指数</div>
+        <div class="idx-value"><span class="idx-skel"></span></div>
+        <div class="idx-change flat">--</div>
+      </div>
+      <div class="idx-item" id="idx_1">
+        <div class="idx-name">道琼斯指数</div>
+        <div class="idx-value"><span class="idx-skel"></span></div>
+        <div class="idx-change flat">--</div>
+      </div>
+      <div class="idx-item" id="idx_2">
+        <div class="idx-name">黄金现货</div>
+        <div class="idx-value"><span class="idx-skel"></span></div>
+        <div class="idx-change flat">--</div>
+      </div>
+    </div>
+
+    <!-- 新闻列表 -->
+    <div id="news-container">
+      <div class="loading-wrap">
+        <span class="loading-icon">📰</span>
+        新闻加载中...
+      </div>
+    </div>
+
+    <!-- 摸鱼提示 -->
+    <div id="tip-card" class="tip-card" style="display:none"></div>
+
+  </div>
+
+  <script>
+    // ===== 主题切换 =====
+    (function() {
+      var saved = localStorage.getItem('moyu-theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.classList.add('dark-mode');
+      }
+    })();
+    document.getElementById('theme-toggle').addEventListener('click', function() {
+      var isDark = document.documentElement.classList.toggle('dark-mode');
+      localStorage.setItem('moyu-theme', isDark ? 'dark' : 'light');
+    });
+
+    // ===== 日期时间 =====
+    var daysEN = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+    var daysCN = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+    var dayClasses = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+
+    function setupDailyCard() {
+      var card = document.getElementById('dynamicDailyCard');
+      var dow = new Date().getDay();
+      dayClasses.forEach(function(c){ card.classList.remove(c); });
+      card.classList.add(dayClasses[dow]);
+      document.getElementById('cardDayEnglish').textContent = daysEN[dow];
+      document.getElementById('cardDayChinese').textContent = daysCN[dow];
+    }
+
+    function displayDateTime() {
+      var d = new Date();
+      var s = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 ' +
+              String(d.getHours()).padStart(2,'0') + '时' +
+              String(d.getMinutes()).padStart(2,'0') + '分' +
+              String(d.getSeconds()).padStart(2,'0') + '秒';
+      document.getElementById('date-title').textContent = s;
+      setTimeout(displayDateTime, 1000);
+    }
+
+    // ===== 一言 =====
+    function loadHitokoto() {
+      fetch('https://v1.hitokoto.cn/?encode=json&charset=utf-8')
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          var from = data.from_who || data.from;
+          var text = data.hitokoto;
+          if (from) text += ' — ' + from;
+          document.getElementById('cardQuote').textContent = text;
+        })
+        .catch(function(){
+          document.getElementById('cardQuote').textContent = '每一天的坚持，都是通往优秀的路。';
+        });
+    }
+
+    // ===== 指数行情（腾讯证券接口）=====
+    // 数据格式（腾讯证券 qt.gtimg.cn）：
+    //   上证：v_sh000001="1~name~code~price~yes_close~open~vol~..."
+    //   道琼斯：v_usDJI="200~name~code~price~yesterday~open~..."
+    //   黄金：v_hAu_T="1~name~code~price~..."
+    function parseQtLine(raw) {
+      // raw 形如：v_sh000001="1~上证指数~000001~3913.72~3889.08~..."
+      var m = raw.match(/="([^"]+)"/);
+      if (!m) return null;
+      return m[1].split('~');
+    }
+
+    function setIdx(i, name, price, changePct) {
+      var el = document.getElementById('idx_' + i);
+      if (!el) return;
+      var isUp = changePct > 0;
+      var isDown = changePct < 0;
+      var cls = isUp ? 'up' : (isDown ? 'down' : 'flat');
+      var arrow = isUp ? '▲ ' : (isDown ? '▼ ' : '');
+      el.innerHTML =
+        '<div class="idx-name">' + name + '</div>' +
+        '<div class="idx-value">' + (price || '--') + '</div>' +
+        '<div class="idx-change ' + cls + '">' + (changePct !== null && !isNaN(changePct) ? arrow + Math.abs(changePct).toFixed(2) + '%' : '--') + '</div>';
+    }
+    function failIdx(i, name) {
+      var el = document.getElementById('idx_' + i);
+      if (!el) return;
+      el.innerHTML =
+        '<div class="idx-name">' + name + '</div>' +
+        '<div class="idx-value" style="font-size:0.9rem;color:#bbb">暂无</div>' +
+        '<div class="idx-change flat">--</div>';
+    }
+
+    function loadIndexes() {
+      Promise.all([
+        fetch('https://qt.gtimg.cn/q=sh000001'),
+        fetch('https://qt.gtimg.cn/q=usDJI'),
+        fetch('https://qt.gtimg.cn/q=hAu_T')
+      ]).then(function(rs) { return Promise.all(rs.map(function(r) { return r.text(); })); })
+      .then(function(texts) {
+        // 上证 sh000001
+        try {
+          var sz = parseQtLine(texts[0]);
+          if (sz && sz[3]) {
+            var szPrice = parseFloat(sz[3]).toFixed(2);
+            var szYesClose = sz[4] ? parseFloat(sz[4]) : null;
+            var szChangePct = (szYesClose && szYesClose > 0) ? ((parseFloat(sz[3]) - szYesClose) / szYesClose * 100) : null;
+            setIdx(0, '上证指数', szPrice, szChangePct);
+          } else { failIdx(0, '上证指数'); }
+        } catch(e) { failIdx(0, '上证指数'); }
+
+        // 道琼斯 usDJI
+        try {
+          var dj = parseQtLine(texts[1]);
+          if (dj && dj[3]) {
+            var djPrice = parseFloat(dj[3]).toFixed(2);
+            var djYesClose = dj[4] ? parseFloat(dj[4]) : null;
+            var djChangePct = (djYesClose && djYesClose > 0) ? ((parseFloat(dj[3]) - djYesClose) / djYesClose * 100) : null;
+            setIdx(1, '道琼斯指数', djPrice, djChangePct);
+          } else { failIdx(1, '道琼斯指数'); }
+        } catch(e) { failIdx(1, '道琼斯指数'); }
+
+        // 黄金 hAu_T（上海金现货）
+        try {
+          var au = parseQtLine(texts[2]);
+          if (au && au[3]) {
+            var auPrice = parseFloat(au[3]).toFixed(2);
+            setIdx(2, '黄金现货', auPrice, null);
+          } else { failIdx(2, '黄金现货'); }
+        } catch(e) { failIdx(2, '黄金现货'); }
+
+      })
+      .catch(function() {
+        failIdx(0, '上证指数');
+        failIdx(1, '道琼斯指数');
+        failIdx(2, '黄金现货');
+      });
+    }
+
+    // ===== 新闻60s + 摸鱼提示 =====
+    function loadNews() {
+      var retry = 0;
+      (function go() {
+        fetch('https://60s-api.viki.moe/v2/60s')
+          .then(function(r){ if(!r.ok) throw new Error(); return r.json(); })
+          .then(function(data){
+            if (data.code !== 200) throw new Error();
+            var container = document.getElementById('news-container');
+            container.innerHTML = '';
+            data.data.news.forEach(function(item, i) {
+              var card = document.createElement('div');
+              card.className = 'news-card';
+              card.innerHTML = '<div class="news-card-number">' + (i+1) + '</div><div class="news-content">' + item + '</div>';
+              container.appendChild(card);
+            });
+            var tip = data.data.tip;
+            if (tip) {
+              var tipEl = document.getElementById('tip-card');
+              tipEl.style.display = 'block';
+              tipEl.textContent = tip;
+            }
+          })
+          .catch(function(){
+            retry++;
+            if (retry <= 3) { setTimeout(go, 1000); }
+            else {
+              document.getElementById('news-container').innerHTML =
+                '<div class="loading-wrap"><span class="loading-icon">😵</span>加载失败，请检查网络</div>';
+            }
+          });
+      })();
+    }
+
+    // ===== 启动 =====
+    setupDailyCard();
+    displayDateTime();
+    loadHitokoto();
+    loadIndexes();
+    loadNews();
+  </script>
+
+</body>
+</html>
