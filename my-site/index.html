@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人主页 | 你的名字</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <header class="header" id="header">
+    <div class="container nav-container">
+      <a href="#" class="logo">
+        <span class="logo-mark"></span>
+        <span class="logo-text">MySite</span>
+      </a>
+      <nav class="nav-menu" id="navMenu">
+        <a href="./index.html" class="nav-link active">首页</a>
+        <a href="./projects.html" class="nav-link">项目</a>
+      </nav>
+      <button class="menu-toggle" id="menuToggle" aria-label="切换菜单">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主页英雄区 -->
+  <section class="hero" id="home">
+    <div class="hero-bg">
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="container hero-content">
+      <p class="hero-tag">Welcome to my world</p>
+      <h1 class="hero-title">
+        你好，我是 <span class="name-highlight">你的名字</span>
+      </h1>
+      <p class="hero-subtitle">
+        <span class="typing-text" id="typingText"></span>
+        <span class="typing-cursor">|</span>
+      </p>
+      <p class="hero-desc">
+        热爱探索技术与设计的边界，喜欢把想法变成现实。这里记录我的成长、作品与思考。
+      </p>
+      <div class="hero-actions">
+        <a href="./projects.html" class="btn btn-primary">查看项目</a>
+        <a href="mailto:hello@example.com" class="btn btn-outline">联系我</a>
+      </div>
+      <a href="./projects.html" class="scroll-down" aria-label="向下滚动">
+        <span class="scroll-mouse"></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 你的名字. 保留所有权利。</p>
+      <p class="footer-hint">由热爱驱动，持续更新中。</p>
+    </div>
+  </footer>
+
+  <script src="./js/main.js"></script>
+</body>
+</html>

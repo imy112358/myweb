@@ -1,0 +1,14 @@
+# Large media files (optional, uncomment if needed)
+# *.mp4
+# *.mp3
+# img/back/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
