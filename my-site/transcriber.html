@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视频提取文案 | MySite</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header class="header" id="header">
+    <div class="container nav-container">
+      <a href="./index.html" class="logo">
+        <span class="logo-mark"></span>
+        <span class="logo-text">MySite</span>
+      </a>
+      <nav class="nav-menu" id="navMenu">
+        <a href="./index.html" class="nav-link">首页</a>
+        <a href="./projects.html" class="nav-link">项目</a>
+        <a href="./transcriber.html" class="nav-link active">提取文案</a>
+      </nav>
+      <button class="menu-toggle" id="menuToggle" aria-label="切换菜单">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </header>
+
+  <section class="page-hero transcriber-hero">
+    <div class="hero-bg">
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="container hero-content">
+      <p class="hero-tag">Video to Copywriting</p>
+      <h1 class="hero-title">视频提取文案</h1>
+      <p class="hero-desc">
+        粘贴抖音链接或上传本地视频，调用本机讯飞语音听写配置，把视频里说的话转成可复制文案。
+      </p>
+    </div>
+  </section>
+
+  <main class="section transcriber-section">
+    <div class="container transcriber-layout">
+      <section class="tool-panel reveal active">
+        <div class="tool-panel-header">
+          <span class="feature-icon">🎙️</span>
+          <div>
+            <h2>开始提取</h2>
+            <p>本页面需要先启动本地服务：<code>python3 tools/transcriber_web_server.py</code></p>
+          </div>
+        </div>
+
+        <form class="transcriber-form" id="transcriberForm">
+          <div class="mode-tabs" role="tablist" aria-label="输入方式">
+            <button type="button" class="mode-tab active" data-mode="link">抖音链接</button>
+            <button type="button" class="mode-tab" data-mode="file">上传视频</button>
+          </div>
+
+          <label class="form-field" id="linkField">
+            <span>抖音分享链接 / 分享口令</span>
+            <textarea id="sourceInput" rows="4" placeholder="例如：https://v.douyin.com/7MeHDDyzuSE"></textarea>
+          </label>
+
+          <label class="form-field is-hidden" id="fileField">
+            <span>选择本地视频或音频</span>
+            <input id="fileInput" type="file" accept="video/*,audio/*">
+          </label>
+
+          <div class="option-grid">
+            <label class="form-field">
+              <span>浏览器 Cookie</span>
+              <select id="cookieSelect">
+                <option value="chrome" selected>Chrome</option>
+                <option value="safari">Safari</option>
+                <option value="">不使用 Cookie</option>
+              </select>
+              <small>抖音提示需要 Cookie 时，请先在对应浏览器登录抖音。</small>
+            </label>
+
+            <label class="check-option">
+              <input id="preferAudioInput" type="checkbox">
+              <span>优先下载音频，节省空间</span>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" id="submitBtn" type="submit">开始提取</button>
+            <button class="btn btn-outline" id="copyBtn" type="button" disabled>复制结果</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="result-panel reveal active">
+        <div class="status-card" id="statusCard">
+          <span class="status-dot" id="statusDot"></span>
+          <div>
+            <strong id="statusText">等待任务</strong>
+            <p id="statusHint">粘贴链接或上传视频后点击“开始提取”。</p>
+          </div>
+        </div>
+
+        <div class="result-block">
+          <div class="block-title">
+            <h3>识别结果</h3>
+            <span id="resultMeta">未生成</span>
+          </div>
+          <textarea id="resultText" readonly placeholder="提取完成后，文案会显示在这里。"></textarea>
+        </div>
+
+        <div class="log-block">
+          <div class="block-title">
+            <h3>运行日志</h3>
+            <span id="jobIdText">—</span>
+          </div>
+          <pre id="logOutput">等待启动...</pre>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 你的名字. 保留所有权利。</p>
+      <p class="footer-hint">本工具仅供自用，请确认你有权处理对应视频内容。</p>
+    </div>
+  </footer>
+
+  <script src="./js/main.js"></script>
+  <script src="./js/transcriber.js"></script>
+</body>
+</html>

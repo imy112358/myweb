@@ -1,0 +1,5 @@
+.xfyun_iat.env
+output/
+__pycache__/
+*.pyc
+.DS_Store

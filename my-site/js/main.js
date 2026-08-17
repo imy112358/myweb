@@ -96,11 +96,29 @@
   document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
     anchor.addEventListener('click', function (event) {
       const href = this.getAttribute('href');
-      if (href === '#') return;
+      if (href === '#') {
+        event.preventDefault();
+        return;
+      }
       const target = document.querySelector(href);
       if (target) {
         event.preventDefault();
         target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  document.querySelectorAll('.clickable-card[data-href]').forEach(function (card) {
+    function openCard(event) {
+      if (event.target.closest('a, button')) return;
+      window.location.href = card.getAttribute('data-href');
+    }
+
+    card.addEventListener('click', openCard);
+    card.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openCard(event);
       }
     });
   });

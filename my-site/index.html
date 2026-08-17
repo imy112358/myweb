@@ -10,13 +10,14 @@
   <!-- 顶部导航 -->
   <header class="header" id="header">
     <div class="container nav-container">
-      <a href="#" class="logo">
+      <a href="./index.html" class="logo">
         <span class="logo-mark"></span>
         <span class="logo-text">MySite</span>
       </a>
       <nav class="nav-menu" id="navMenu">
         <a href="./index.html" class="nav-link active">首页</a>
         <a href="./projects.html" class="nav-link">项目</a>
+        <a href="./transcriber.html" class="nav-link">提取文案</a>
       </nav>
       <button class="menu-toggle" id="menuToggle" aria-label="切换菜单">
         <span></span>
@@ -45,11 +46,59 @@
       </p>
       <div class="hero-actions">
         <a href="./projects.html" class="btn btn-primary">查看项目</a>
-        <a href="mailto:hello@example.com" class="btn btn-outline">联系我</a>
+        <a href="#features" class="btn btn-outline">常用功能</a>
       </div>
-      <a href="./projects.html" class="scroll-down" aria-label="向下滚动">
+      <a href="#features" class="scroll-down" aria-label="向下滚动">
         <span class="scroll-mouse"></span>
       </a>
+    </div>
+  </section>
+
+  <section class="section feature-section" id="features">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-tag">Quick Access</span>
+        <h2 class="section-title">常用功能</h2>
+        <p class="section-desc">把天气、资讯和摸鱼日历放在首页，打开后可以直接进入。</p>
+      </div>
+
+      <div class="feature-grid">
+        <a href="./transcriber.html" class="feature-card reveal">
+          <span class="feature-icon">🎙️</span>
+          <span class="feature-content">
+            <strong>视频提取文案</strong>
+            <small>粘贴抖音链接或上传视频，识别视频里的口播内容</small>
+          </span>
+          <span class="feature-arrow">→</span>
+        </a>
+
+        <a href="./weather.html" class="feature-card reveal">
+          <span class="feature-icon">☀️</span>
+          <span class="feature-content">
+            <strong>天气详情</strong>
+            <small>查看实时天气、温度和气象信息</small>
+          </span>
+          <span class="feature-arrow">→</span>
+        </a>
+
+        <a href="./news.html" class="feature-card reveal">
+          <span class="feature-icon">📰</span>
+          <span class="feature-content">
+            <strong>每日资讯</strong>
+            <small>聚合每日新闻和摸鱼提示</small>
+          </span>
+          <span class="feature-arrow">→</span>
+        </a>
+
+        <a href="./moyu.html" class="feature-card reveal">
+          <span class="feature-icon">🐟</span>
+          <span class="feature-content">
+            <strong>摸鱼日历</strong>
+            <small>查看工作日进度、假期和 AI 新闻</small>
+          </span>
+          <span class="feature-arrow">→</span>
+        </a>
+      </div>
     </div>
   </section>
 
